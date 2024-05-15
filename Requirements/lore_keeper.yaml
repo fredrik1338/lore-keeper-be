@@ -1,0 +1,106 @@
+openapi: 3.0.1
+info:
+  title: Lore keeper
+  description: >
+    This api describes the endpoint for the lore keeper backend.
+    The backend communicated with a postgres server for all data storage
+
+  version: 0.0.1
+paths:
+  /api/v1/lore-keeper/characters:
+    get:
+      summary: Get character.
+      responses:
+        '200':
+          description: Successfully got a character by name
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/character'
+  /api/v1/lore-keeper/worlds:
+    get:
+      summary: Get world by name
+      responses:
+        '200':
+          description: Successfully got a world
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/world'
+  /api/v1/lore-keeper/cities:
+    get:
+      summary: Get a city by name
+      responses:
+        '200':
+          description: Successfully got a city
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/city'
+  /api/v1/lore-keeper/factions:
+    get:
+      summary: Get faction by name
+      responses:
+        '200':
+          description: Successfully got a faction
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/faction'
+components:
+  schemas:
+    character:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Bob bobsson
+        age: 
+          type: integer
+          example: 20
+    world:
+      type: object
+      properties:
+        name:
+          type: string
+          example: new bobia
+    city:
+      type: object
+      properties:
+        name: 
+          type: string
+          example: bobsville
+        description: 
+          type: string
+          example: bobsville is the city where bob lives
+        founding_date:
+          type: integer
+          example: 2000
+        notable_characters:
+          type: array
+          items:
+            $ref: '#/components/schemas/character'
+        factions: 
+          type: array
+          items:
+            $ref: '#/components/schemas/faction'
+    faction: 
+      type: object
+      properties:
+        name: 
+          type: string
+          example: the cult of bob
+        description: 
+          type: string
+          example: the cult of bob is a cult dedicated to bob
+        founding_date:
+          type: integer
+          example: 200
+        notable_characters:
+          type: array
+          items:
+            $ref: '#/components/schemas/character'
+        leader:
+          type: object
+          $ref: '#/components/schemas/character'
+          
