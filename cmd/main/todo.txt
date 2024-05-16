@@ -1,7 +1,0 @@
-Create script for building app. Or investigate better way to structure project
-Create DB client
-Create DB using some postgres app. Maybe through a docker image?
-
-Create openapi spec
-
-Create DB specs

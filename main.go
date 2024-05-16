@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"serverapp/internal"
+	"lore-keeper-be/internal"
 )
 
 func main() {

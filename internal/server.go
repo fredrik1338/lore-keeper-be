@@ -3,8 +3,8 @@ package internal
 import (
 	"context"
 	"fmt"
+	"lore-keeper-be/internal/database"
 	"net/http"
-	"serverapp/internal/database"
 )
 
 type Server struct {

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"serverapp/internal/types"
+	"lore-keeper-be/internal/types"
 
 	_ "github.com/lib/pq"
 )

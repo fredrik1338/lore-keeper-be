@@ -7,16 +7,16 @@ LABEL org.opencontainers.image.source=https://github.com/fredrik1338/lore-keeper
 WORKDIR /app
 
 # Copy the Go application source code to the container's working directory
-COPY cmd/ /app/cmd/
 COPY internal/ /app/internal/
 # COPY vendor/ /app/vendor/
 
 # Copy the main.go file from the host into the container
+COPY main.go .
 COPY go.mod .
 COPY go.sum .
 
 # Build the Go application inside the container
-RUN go build -o main ./cmd/main
+RUN go build -o main .
 
 ENV BACKEND_PORT="8080"
 ENV BACKEND_HOST=""
