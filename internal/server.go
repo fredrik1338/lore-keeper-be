@@ -1,9 +1,10 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"lore-keeper-be/internal/database"
-	"lore-keeper-be/internal/database/pg"
+	"lore-keeper-be/internal/database/sqlite"
 	"net/http"
 )
 
@@ -16,20 +17,18 @@ type Server struct {
 func newServer() Server {
 	mux := http.NewServeMux()
 
-	database, err := pg.New()
+	// TODO add a flag to choose the database
+	// database, err := pg.New()
+	database, err := sqlite.New()
 
 	if err != nil {
-		panic(fmt.Sprintf("Could not setup DB %s", err.Error()))
+		panic(fmt.Sprintf("Could not crate DB %s", err.Error()))
 	}
 
-	//TODO set handler for any new functions
-	// To test just use curl localhost:8080/api/v1/lore-keeper/<characters or worlds> TODOD create better examples
-
-	// mux.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, characters), handleCharacters)
-	// mux.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, worlds), handleWorlds)
-	// mux.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, cities), handleCities)
-	// mux.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, factions), handleFactions)
-	//mux.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) { fmt.Print("hello") })
+	err = database.InitDB(context.TODO()) //TODO this context should be passed fomr above to allow graceful shutdown
+	if err != nil {
+		panic(fmt.Sprintf("Could not init DB %s", err.Error()))
+	}
 
 	return Server{
 		multiplexer: mux,
@@ -44,6 +43,7 @@ func (server Server) Start() error {
 	server.multiplexer.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, worlds), server.handleWorlds)
 	server.multiplexer.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, cities), server.handleCities)
 	server.multiplexer.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, factions), server.handleFactions)
+	server.multiplexer.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) { fmt.Print("hello") })
 
 	return http.ListenAndServe(server.address, server.multiplexer)
 }
