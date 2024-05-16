@@ -1,0 +1,75 @@
+name: drop pipeline
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+    types: [closed]
+
+jobs:
+  test-build-and-push-prod:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      containerName: ${{ steps.push.outputs.container }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    env:
+      PROJECT_ID: cicd-poc-sandbox
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.21.5
+        
+    - name: Build the app
+      run: make build
+
+    - name: Docker login
+      run: sudo docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build the prod Docker image
+      run: make docker-build-prod
+
+    - name: Install jq
+      run: |
+        sudo apt-get update
+        sudo apt-get install jq=1.6-2.1ubuntu3
+
+    # - name: Google Auth
+    #   id: auth
+    #   uses: 'google-github-actions/auth@v2'
+    #   with:
+    #     project_id: cicd-poc-sandbox
+    #     workload_identity_provider: "${{ secrets.WIF_PROVIDER }}"
+    #     token_format: 'access_token'
+    #     service_account: "${{ secrets.WIF_SERVICE_ACCOUNT }}"
+
+
+    # - name: Set up Google Cloud SDK
+    #   uses: google-github-actions/setup-gcloud@v1
+
+    # - name: Tag and push image to prod and GCP
+    #   id: push
+    #   run: |
+    #     export ACCESS_TOKEN=${{ secrets.DOCKER_PASSWORD }}
+    #     export VERSION=$(gcloud artifacts docker tags list europe-west1-docker.pkg.dev/cicd-poc-sandbox/cshift-todo/todo-be-prod | tail -n 1 |  awk '{print $1}')
+    #     export NEW_VERSION=$(./increment_semver.sh ${VERSION})
+    #     gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet --access-token-file ${{ steps.auth.outputs.access_token }}
+    #     docker tag todo-backend-prod europe-west1-docker.pkg.dev/cicd-poc-sandbox/cshift-todo/todo-be-prod:${NEW_VERSION}
+    #     docker push europe-west1-docker.pkg.dev/cicd-poc-sandbox/cshift-todo/todo-be-prod:${NEW_VERSION}
+    #     echo "container=ghcr.io/cshift-tech/todo-be-prod:${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+
+
+  deploy:
+    needs: [test-build-and-push-prod]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run stuff
+      run: echo "run stuff"
