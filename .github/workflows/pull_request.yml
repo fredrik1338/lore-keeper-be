@@ -10,11 +10,11 @@ jobs:
   test-build-and-push-prod:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    outputs:
-      containerName: ${{ steps.push.outputs.container }}
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+    # outputs:
+    #   containerName: ${{ steps.push.outputs.container }}
+    # permissions:
+    #   contents: 'read'
+    #   id-token: 'write'
     env:
       PROJECT_ID: cicd-poc-sandbox
     steps:
@@ -31,16 +31,16 @@ jobs:
     - name: Build the app
       run: make build
 
-    - name: Docker login
-      run: sudo docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+    # - name: Docker login
+    #   run: sudo docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build the prod Docker image
-      run: make docker-build-prod
+    # - name: Build the prod Docker image
+    #   run: make docker-build-prod
 
-    - name: Install jq
-      run: |
-        sudo apt-get update
-        sudo apt-get install jq=1.6-2.1ubuntu3
+    # - name: Install jq
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install jq=1.6-2.1ubuntu3
 
     # - name: Google Auth
     #   id: auth
