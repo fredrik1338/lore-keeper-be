@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-func getCity(ctx context.Context, body []byte) (string, int) {
+func getCity(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
+
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	city, err := database.GetCity(ctx, db, name)
+	city, err := db.GetCity(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -30,15 +30,15 @@ func getCity(ctx context.Context, body []byte) (string, int) {
 	return string(response), http.StatusOK
 }
 
-func addCity(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func addCity(ctx context.Context, body []byte, db database.Database) (string, int) {
+
 	var city types.City
 	err := json.Unmarshal(body, &city)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.AddCity(ctx, db, &city)
+	err = db.AddCity(ctx, &city)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -46,15 +46,15 @@ func addCity(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Added City named %s", city.Name), http.StatusOK
 }
 
-func updateCity(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func updateCity(ctx context.Context, body []byte, db database.Database) (string, int) {
+
 	var city types.City
 	err := json.Unmarshal(body, &city)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.UpdateCity(ctx, db, &city)
+	err = db.UpdateCity(ctx, &city)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -62,15 +62,15 @@ func updateCity(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Updated city named %s", city.Name), http.StatusOK
 }
 
-func deleteCity(ctx context.Context, body []byte) (string, int) {
+func deleteCity(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
+
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.DeleteCity(ctx, db, name)
+	err = db.DeleteCity(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}

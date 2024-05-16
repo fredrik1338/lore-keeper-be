@@ -9,15 +9,14 @@ import (
 	"net/http"
 )
 
-func getCharacter(ctx context.Context, body []byte) (string, int) {
+func getCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	character, err := database.GetCharacter(ctx, db, name)
+	character, err := db.GetCharacter(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -29,15 +28,15 @@ func getCharacter(ctx context.Context, body []byte) (string, int) {
 	return string(response), http.StatusOK
 }
 
-func addCharacter(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func addCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
+
 	var person types.Character
 	err := json.Unmarshal(body, &person)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.AddCharacter(ctx, db, &person)
+	err = db.AddCharacter(ctx, &person)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -45,15 +44,14 @@ func addCharacter(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Added character named %s", person.Name), http.StatusOK
 }
 
-func updateCharacter(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func updateCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var person types.Character
 	err := json.Unmarshal(body, &person)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.UpdateCharacter(ctx, db, &person)
+	err = db.UpdateCharacter(ctx, &person)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -61,15 +59,15 @@ func updateCharacter(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Updated character named %s", person.Name), http.StatusOK
 }
 
-func deleteCharacter(ctx context.Context, body []byte) (string, int) {
+func deleteCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
+
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.DeleteCharacter(ctx, db, name)
+	err = db.DeleteCharacter(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}

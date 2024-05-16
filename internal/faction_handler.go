@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-func getFaction(ctx context.Context, body []byte) (string, int) {
+func getFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
+
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	faction, err := database.GetFaction(ctx, db, name)
+	faction, err := db.GetFaction(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -30,15 +30,15 @@ func getFaction(ctx context.Context, body []byte) (string, int) {
 	return string(response), http.StatusOK
 }
 
-func addFaction(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func addFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
+
 	var faction types.Faction
 	err := json.Unmarshal(body, &faction)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.AddFaction(ctx, db, &faction)
+	err = db.AddFaction(ctx, &faction)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -46,15 +46,15 @@ func addFaction(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Added faction named %s", faction.Name), http.StatusOK
 }
 
-func updateFaction(ctx context.Context, body []byte) (string, int) {
-	db := getDBConn()
+func updateFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
+
 	var faction types.Faction
 	err := json.Unmarshal(body, &faction)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.UpdateFaction(ctx, db, &faction)
+	err = db.UpdateFaction(ctx, &faction)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
@@ -62,15 +62,15 @@ func updateFaction(ctx context.Context, body []byte) (string, int) {
 	return fmt.Sprintf("Updated faction named %s", faction.Name), http.StatusOK
 }
 
-func deleteFaction(ctx context.Context, body []byte) (string, int) {
+func deleteFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
 	var name string
-	db := getDBConn()
+
 	err := json.Unmarshal(body, &name)
 	if err != nil {
 		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
 	}
 
-	err = database.DeleteFaction(ctx, db, name)
+	err = db.DeleteFaction(ctx, name)
 	if err != nil {
 		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
 	}
