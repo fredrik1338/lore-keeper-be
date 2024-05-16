@@ -1,10 +1,7 @@
 package internal
 
 import (
-	"database/sql"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -17,25 +14,11 @@ const (
 	factions   = "factions"
 )
 
-// TODO get the connstr from env variables
-const (
-	connStr = "postgresql://admin:pgadmin@localhost/MyfirstDB?sslmode=disable"
-)
-
-func getDBConn() *sql.DB {
-	// Connect to database
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err) //TODO change this to return error
-	}
-	return db
-}
-
-func handleCharacters(writer http.ResponseWriter, request *http.Request) {
+func (api Server) handleCharacters(writer http.ResponseWriter, request *http.Request) {
 	var message string
 	var status int
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		message = "Could not read request"
 		status = http.StatusBadRequest
@@ -43,13 +26,13 @@ func handleCharacters(writer http.ResponseWriter, request *http.Request) {
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getCharacter(request.Context(), body)
+		message, status = getCharacter(request.Context(), body, api.db)
 	case http.MethodPost:
-		message, status = addCharacter(request.Context(), body)
+		message, status = addCharacter(request.Context(), body, api.db)
 	case http.MethodDelete:
-		message, status = deleteCharacter(request.Context(), body)
+		message, status = deleteCharacter(request.Context(), body, api.db)
 	case http.MethodPut:
-		message, status = updateCharacter(request.Context(), body)
+		message, status = updateCharacter(request.Context(), body, api.db)
 	default:
 		message = "Method not allowed on Character endpoint"
 		status = http.StatusMethodNotAllowed
@@ -57,11 +40,11 @@ func handleCharacters(writer http.ResponseWriter, request *http.Request) {
 	writeResponse(writer, status, message)
 }
 
-func handleCities(writer http.ResponseWriter, request *http.Request) {
+func (api Server) handleCities(writer http.ResponseWriter, request *http.Request) {
 	var message string
 	var status int
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		message = "Could not read request"
 		status = http.StatusBadRequest
@@ -69,13 +52,13 @@ func handleCities(writer http.ResponseWriter, request *http.Request) {
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getCity(request.Context(), body)
+		message, status = getCity(request.Context(), body, api.db)
 	case http.MethodPost:
-		message, status = addCity(request.Context(), body)
+		message, status = addCity(request.Context(), body, api.db)
 	case http.MethodDelete:
-		message, status = deleteCity(request.Context(), body)
+		message, status = deleteCity(request.Context(), body, api.db)
 	case http.MethodPut:
-		message, status = updateCity(request.Context(), body)
+		message, status = updateCity(request.Context(), body, api.db)
 	default:
 		io.WriteString(writer, "Method not allowed")
 	}
@@ -83,11 +66,11 @@ func handleCities(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func handleWorlds(writer http.ResponseWriter, request *http.Request) {
+func (api Server) handleWorlds(writer http.ResponseWriter, request *http.Request) {
 	var message string
 	var status int
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		message = "Could not read request"
 		status = http.StatusBadRequest
@@ -95,24 +78,24 @@ func handleWorlds(writer http.ResponseWriter, request *http.Request) {
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getWorld(request.Context(), body)
+		message, status = getWorld(request.Context(), body, api.db)
 	case http.MethodPost:
-		message, status = addWorld(request.Context(), body)
+		message, status = addWorld(request.Context(), body, api.db)
 	case http.MethodDelete:
-		message, status = deleteWorld(request.Context(), body)
+		message, status = deleteWorld(request.Context(), body, api.db)
 	case http.MethodPut:
-		message, status = updateWorld(request.Context(), body)
+		message, status = updateWorld(request.Context(), body, api.db)
 	default:
 		io.WriteString(writer, "Method not allowed")
 	}
 	writeResponse(writer, status, message)
 }
 
-func handleFactions(writer http.ResponseWriter, request *http.Request) {
+func (api Server) handleFactions(writer http.ResponseWriter, request *http.Request) {
 	var message string
 	var status int
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		message = "Could not read request"
 		status = http.StatusBadRequest
@@ -120,13 +103,13 @@ func handleFactions(writer http.ResponseWriter, request *http.Request) {
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getFaction(request.Context(), body)
+		message, status = getFaction(request.Context(), body, api.db)
 	case http.MethodPost:
-		message, status = addFaction(request.Context(), body)
+		message, status = addFaction(request.Context(), body, api.db)
 	case http.MethodDelete:
-		message, status = deleteFaction(request.Context(), body)
+		message, status = deleteFaction(request.Context(), body, api.db)
 	case http.MethodPut:
-		message, status = updateFaction(request.Context(), body)
+		message, status = updateFaction(request.Context(), body, api.db)
 	default:
 		io.WriteString(writer, "Method not allowed")
 	}
