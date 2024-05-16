@@ -1,8 +1,8 @@
 run:
-	go run cmd/main/main.go
+	go run main.go
 
 build:
-	go build -o bin/main cmd/main/main.go
+	go build -o bin/main main.go
 
 docker-build-dev:
 	docker build -t lore-keeper-be-dev .

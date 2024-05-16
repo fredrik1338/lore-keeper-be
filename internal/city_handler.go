@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"lore-keeper-be/internal/database"
+	"lore-keeper-be/internal/types"
 	"net/http"
-	"serverapp/internal/database"
-	"serverapp/internal/types"
 )
 
 func getCity(ctx context.Context, body []byte) (string, int) {

@@ -1,4 +1,4 @@
-module serverapp
+module lore-keeper-be
 
 go 1.18
 
