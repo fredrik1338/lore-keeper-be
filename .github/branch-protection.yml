@@ -1,0 +1,14 @@
+name: Branch and Tag Protection
+
+# Branch protection rules
+branches:
+  main:
+    - required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        # dismissal_teams:
+        #   - cshift-tech/devs
+    - enforce_admins: true # This is set so that administrators also have to comply with these rules.
+    - required_linear_history: true
+    - allow_force_pushes: false
+    - allow_deletions: false
