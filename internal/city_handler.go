@@ -30,6 +30,20 @@ func getCity(ctx context.Context, body []byte, db database.Database) (string, in
 	return string(response), http.StatusOK
 }
 
+func listCities(ctx context.Context, db database.Database) (string, int) {
+	cities, err := db.ListCities(ctx)
+	if err != nil {
+		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	response, err := json.Marshal(cities)
+	if err != nil {
+		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	return string(response), http.StatusOK
+}
+
 func addCity(ctx context.Context, body []byte, db database.Database) (string, int) {
 
 	var city types.City

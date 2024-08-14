@@ -46,6 +46,20 @@ func addWorld(ctx context.Context, body []byte, db database.Database) (string, i
 	return fmt.Sprintf("Added world named %s", world.Name), http.StatusOK
 }
 
+func listWorlds(ctx context.Context, db database.Database) (string, int) {
+	worlds, err := db.ListWorlds(ctx)
+	if err != nil {
+		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	response, err := json.Marshal(worlds)
+	if err != nil {
+		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	return string(response), http.StatusOK
+}
+
 func updateWorld(ctx context.Context, body []byte, db database.Database) (string, int) {
 
 	var world types.World
