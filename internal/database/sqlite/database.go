@@ -77,6 +77,24 @@ func (db *Database) AddCharacter(ctx context.Context, character *types.Character
 	return nil
 }
 
+func (db *Database) ListCharacters(ctx context.Context) ([]string, error) {
+	var characters []string
+	rows, err := db.sqlite.Query(database.ListCharactersQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var character string
+		err = rows.Scan(&character)
+		if err != nil {
+			return nil, err
+		}
+		characters = append(characters, character)
+	}
+	rows.Close()
+	return characters, nil
+}
+
 func (db *Database) DeleteCharacter(ctx context.Context, name string) error {
 	statement, err := db.sqlite.Prepare(database.DeleteCharacterQuery)
 	if err != nil {
@@ -131,6 +149,24 @@ func (db *Database) AddWorld(ctx context.Context, world *types.World) error {
 		return err
 	}
 	return nil
+}
+
+func (db *Database) ListWorlds(ctx context.Context) ([]string, error) {
+	var worlds []string
+	rows, err := db.sqlite.Query(database.ListWorldsQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var world string
+		err = rows.Scan(&world)
+		if err != nil {
+			return nil, err
+		}
+		worlds = append(worlds, world)
+	}
+	rows.Close()
+	return worlds, nil
 }
 
 func (db *Database) DeleteWorld(ctx context.Context, name string) error {
@@ -190,6 +226,24 @@ func (db *Database) AddCity(ctx context.Context, city *types.City) error {
 	return nil
 }
 
+func (db *Database) ListCities(ctx context.Context) ([]string, error) {
+	var cities []string
+	rows, err := db.sqlite.Query(database.ListCitiesQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var city string
+		err = rows.Scan(&city)
+		if err != nil {
+			return nil, err
+		}
+		cities = append(cities, city)
+	}
+	rows.Close()
+	return cities, nil
+}
+
 func (db *Database) DeleteCity(ctx context.Context, name string) error {
 	statement, err := db.sqlite.Prepare(database.DeleteCityQuery)
 	if err != nil {
@@ -244,6 +298,24 @@ func (db *Database) AddFaction(ctx context.Context, faction *types.Faction) erro
 	}
 	_, err = statement.Exec(faction.Name, faction.Description, faction.FoundingDate, strings.Join(faction.NotableCharacters, ","))
 	return err
+}
+
+func (db *Database) ListFactions(ctx context.Context) ([]string, error) {
+	var factions []string
+	rows, err := db.sqlite.Query(database.ListFactionsQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var faction string
+		err = rows.Scan(&faction)
+		if err != nil {
+			return nil, err
+		}
+		factions = append(factions, faction)
+	}
+	rows.Close()
+	return factions, nil
 }
 
 func (db *Database) DeleteFaction(ctx context.Context, name string) error {

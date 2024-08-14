@@ -45,7 +45,10 @@ func (server Server) Start() error {
 	server.multiplexer.HandleFunc(fmt.Sprintf("/%s/%s", apiPath, factions), server.handleFactions)
 	server.multiplexer.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) { fmt.Print("hello") })
 
-	return http.ListenAndServe(server.address, server.multiplexer)
+	// Wrap the entire mux with the CORS middleware
+	corsMux := corsMiddleware(server.multiplexer)
+
+	return http.ListenAndServe(server.address, corsMux)
 }
 
 // Example queries

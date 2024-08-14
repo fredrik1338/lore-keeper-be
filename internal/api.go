@@ -26,7 +26,12 @@ func (api Server) handleCharacters(writer http.ResponseWriter, request *http.Req
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getCharacter(request.Context(), body, api.db)
+		// Check for a specific list parameter
+		if _, ok := request.URL.Query()["list"]; ok {
+			message, status = listCharacters(request.Context(), api.db)
+		} else {
+			message, status = getCharacter(request.Context(), body, api.db)
+		}
 	case http.MethodPost:
 		message, status = addCharacter(request.Context(), body, api.db)
 	case http.MethodDelete:
@@ -52,7 +57,12 @@ func (api Server) handleCities(writer http.ResponseWriter, request *http.Request
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getCity(request.Context(), body, api.db)
+		// Check for a specific list parameter
+		if _, ok := request.URL.Query()["list"]; ok {
+			message, status = listCities(request.Context(), api.db)
+		} else {
+			message, status = getCity(request.Context(), body, api.db)
+		}
 	case http.MethodPost:
 		message, status = addCity(request.Context(), body, api.db)
 	case http.MethodDelete:
@@ -78,7 +88,12 @@ func (api Server) handleWorlds(writer http.ResponseWriter, request *http.Request
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getWorld(request.Context(), body, api.db)
+		// Check for a specific list parameter
+		if _, ok := request.URL.Query()["list"]; ok {
+			message, status = listWorlds(request.Context(), api.db)
+		} else {
+			message, status = getWorld(request.Context(), body, api.db)
+		}
 	case http.MethodPost:
 		message, status = addWorld(request.Context(), body, api.db)
 	case http.MethodDelete:
@@ -103,7 +118,12 @@ func (api Server) handleFactions(writer http.ResponseWriter, request *http.Reque
 
 	switch request.Method {
 	case http.MethodGet:
-		message, status = getFaction(request.Context(), body, api.db)
+		// Check for a specific list parameter
+		if _, ok := request.URL.Query()["list"]; ok {
+			message, status = listFactions(request.Context(), api.db)
+		} else {
+			message, status = getFaction(request.Context(), body, api.db)
+		}
 	case http.MethodPost:
 		message, status = addFaction(request.Context(), body, api.db)
 	case http.MethodDelete:

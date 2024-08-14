@@ -28,6 +28,20 @@ func getCharacter(ctx context.Context, body []byte, db database.Database) (strin
 	return string(response), http.StatusOK
 }
 
+func listCharacters(ctx context.Context, db database.Database) (string, int) {
+	characters, err := db.ListCharacters(ctx)
+	if err != nil {
+		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	response, err := json.Marshal(characters)
+	if err != nil {
+		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
+	}
+
+	return string(response), http.StatusOK
+}
+
 func addCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
 
 	var person types.Character
