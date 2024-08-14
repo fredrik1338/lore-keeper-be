@@ -1,142 +1,64 @@
 package internal
 
 import (
-	"io"
-	"net/http"
+	"fmt"
+	"lore-keeper-be/internal/database"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
 	basePath   = "api/v1/"
-	apiPath    = basePath + "lore-keeper"
+	lorePath   = "lore-keeper"
 	characters = "characters"
 	worlds     = "worlds"
 	cities     = "cities"
 	factions   = "factions"
 )
 
-func (api Server) handleCharacters(writer http.ResponseWriter, request *http.Request) {
-	var message string
-	var status int
-
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		message = "Could not read request"
-		status = http.StatusBadRequest
-	}
-
-	switch request.Method {
-	case http.MethodGet:
-		// Check for a specific list parameter
-		if _, ok := request.URL.Query()["list"]; ok {
-			message, status = listCharacters(request.Context(), api.db)
-		} else {
-			message, status = getCharacter(request.Context(), body, api.db)
-		}
-	case http.MethodPost:
-		message, status = addCharacter(request.Context(), body, api.db)
-	case http.MethodDelete:
-		message, status = deleteCharacter(request.Context(), body, api.db)
-	case http.MethodPut:
-		message, status = updateCharacter(request.Context(), body, api.db)
-	default:
-		message = "Method not allowed on Character endpoint"
-		status = http.StatusMethodNotAllowed
-	}
-	writeResponse(writer, status, message)
+type dbAPI struct {
+	db database.Database // TODO gotta move stuff around, this is not clear
 }
 
-func (api Server) handleCities(writer http.ResponseWriter, request *http.Request) {
-	var message string
-	var status int
-
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		message = "Could not read request"
-		status = http.StatusBadRequest
+func NewAPI(db database.Database) *dbAPI {
+	return &dbAPI{
+		db: db,
 	}
-
-	switch request.Method {
-	case http.MethodGet:
-		// Check for a specific list parameter
-		if _, ok := request.URL.Query()["list"]; ok {
-			message, status = listCities(request.Context(), api.db)
-		} else {
-			message, status = getCity(request.Context(), body, api.db)
-		}
-	case http.MethodPost:
-		message, status = addCity(request.Context(), body, api.db)
-	case http.MethodDelete:
-		message, status = deleteCity(request.Context(), body, api.db)
-	case http.MethodPut:
-		message, status = updateCity(request.Context(), body, api.db)
-	default:
-		io.WriteString(writer, "Method not allowed")
-	}
-	writeResponse(writer, status, message)
-
 }
 
-func (api Server) handleWorlds(writer http.ResponseWriter, request *http.Request) {
-	var message string
-	var status int
+func (api dbAPI) Run(host, port string) {
+	router := gin.Default()
+	v1 := router.Group(basePath)
+	v1.Use(Options)
+	lore := v1.Group(lorePath)
+	characters := lore.Group(characters)
+	characters.GET("", api.listCharacters)
+	characters.GET("/:name", api.getCharacter)
+	characters.POST("", api.addCharacter)
+	characters.DELETE("/:name", api.deleteCharacter)
+	characters.PUT("/:name", api.updateCharacter)
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		message = "Could not read request"
-		status = http.StatusBadRequest
-	}
+	worlds := lore.Group(worlds)
+	worlds.GET("", api.listWorlds)
+	worlds.GET("/:name", api.getWorld)
+	worlds.POST("", api.addWorld)
+	worlds.DELETE("/:name", api.deleteWorld)
+	worlds.PUT("/:name", api.updateWorld)
 
-	switch request.Method {
-	case http.MethodGet:
-		// Check for a specific list parameter
-		if _, ok := request.URL.Query()["list"]; ok {
-			message, status = listWorlds(request.Context(), api.db)
-		} else {
-			message, status = getWorld(request.Context(), body, api.db)
-		}
-	case http.MethodPost:
-		message, status = addWorld(request.Context(), body, api.db)
-	case http.MethodDelete:
-		message, status = deleteWorld(request.Context(), body, api.db)
-	case http.MethodPut:
-		message, status = updateWorld(request.Context(), body, api.db)
-	default:
-		io.WriteString(writer, "Method not allowed")
-	}
-	writeResponse(writer, status, message)
-}
+	cities := lore.Group(cities)
+	cities.GET("", api.listCities)
+	cities.GET("/:name", api.getCity)
+	cities.POST("", api.addCity)
+	cities.DELETE("/:name", api.deleteCity)
+	cities.PUT("/:name", api.updateCity)
 
-func (api Server) handleFactions(writer http.ResponseWriter, request *http.Request) {
-	var message string
-	var status int
+	factions := lore.Group(factions)
+	factions.GET("", api.listFactions)
+	factions.GET("/:name", api.getFaction)
+	factions.POST("", api.addFaction)
+	factions.DELETE("/:name", api.deleteFaction)
+	factions.PUT("/:name", api.updateFaction)
 
-	body, err := io.ReadAll(request.Body)
-	if err != nil {
-		message = "Could not read request"
-		status = http.StatusBadRequest
-	}
+	router.Run(fmt.Sprintf("%s:%s", host, port))
 
-	switch request.Method {
-	case http.MethodGet:
-		// Check for a specific list parameter
-		if _, ok := request.URL.Query()["list"]; ok {
-			message, status = listFactions(request.Context(), api.db)
-		} else {
-			message, status = getFaction(request.Context(), body, api.db)
-		}
-	case http.MethodPost:
-		message, status = addFaction(request.Context(), body, api.db)
-	case http.MethodDelete:
-		message, status = deleteFaction(request.Context(), body, api.db)
-	case http.MethodPut:
-		message, status = updateFaction(request.Context(), body, api.db)
-	default:
-		io.WriteString(writer, "Method not allowed")
-	}
-	writeResponse(writer, status, message)
-}
-
-func writeResponse(writer http.ResponseWriter, statusCode int, message string) {
-	writer.Header().Set("Content-Type", "application/text")
-	writer.Write([]byte(message))
 }

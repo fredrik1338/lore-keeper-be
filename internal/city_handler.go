@@ -2,92 +2,89 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"lore-keeper-be/internal/database"
 	"lore-keeper-be/internal/types"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func getCity(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+func (api dbAPI) getCity(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
+		return
 	}
 
-	city, err := db.GetCity(ctx, name)
+	city, err := api.db.GetCity(ctx, name)
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
-
-	response, err := json.Marshal(city)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal character: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, city)
 }
 
-func listCities(ctx context.Context, db database.Database) (string, int) {
-	cities, err := db.ListCities(ctx)
+func (api dbAPI) listCities(ctx *gin.Context) {
+	citys, err := api.db.ListCities(context.Background())
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list citys: %s", err.Error())})
+		return
 	}
 
-	response, err := json.Marshal(cities)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, citys)
 }
 
-func addCity(ctx context.Context, body []byte, db database.Database) (string, int) {
+// Handler for adding a new city
+func (api *dbAPI) addCity(ctx *gin.Context) {
+	var city types.City
+	if err := ctx.ShouldBindJSON(&city); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
+	}
+
+	if err := api.db.AddCity(context.Background(), &city); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to add city: %s", err.Error())})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, city)
+}
+
+// Handler for updating an existing city
+func (api *dbAPI) updateCity(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
+		return
+	}
 
 	var city types.City
-	err := json.Unmarshal(body, &city)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+	if err := ctx.ShouldBindJSON(&city); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
 	}
 
-	err = db.AddCity(ctx, &city)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	city.Name = name // Ensure the name in the URL matches the name in the payload
+	if err := api.db.UpdateCity(context.Background(), &city); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update city: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Added City named %s", city.Name), http.StatusOK
+	ctx.JSON(http.StatusOK, city)
 }
 
-func updateCity(ctx context.Context, body []byte, db database.Database) (string, int) {
-
-	var city types.City
-	err := json.Unmarshal(body, &city)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+// Handler for deleting a city
+func (api *dbAPI) deleteCity(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
+		return
 	}
 
-	err = db.UpdateCity(ctx, &city)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	if err := api.db.DeleteCity(context.Background(), name); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to delete city: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Updated city named %s", city.Name), http.StatusOK
-}
-
-func deleteCity(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
-	}
-
-	err = db.DeleteCity(ctx, name)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return fmt.Sprintf("Deleted City named %s", name), http.StatusOK
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("City '%s' deleted successfully", name)})
 }

@@ -2,89 +2,89 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"lore-keeper-be/internal/database"
 	"lore-keeper-be/internal/types"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func getCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+func (api dbAPI) getCharacter(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
+		return
 	}
 
-	character, err := db.GetCharacter(ctx, name)
+	character, err := api.db.GetCharacter(ctx, name)
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
-	response, err := json.Marshal(character)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal character: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, character)
 }
 
-func listCharacters(ctx context.Context, db database.Database) (string, int) {
-	characters, err := db.ListCharacters(ctx)
+func (api dbAPI) listCharacters(ctx *gin.Context) {
+	characters, err := api.db.ListCharacters(context.Background())
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list characters: %s", err.Error())})
+		return
 	}
 
-	response, err := json.Marshal(characters)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, characters)
 }
 
-func addCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
-
-	var person types.Character
-	err := json.Unmarshal(body, &person)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+// Handler for adding a new character
+func (api *dbAPI) addCharacter(ctx *gin.Context) {
+	var character types.Character
+	if err := ctx.ShouldBindJSON(&character); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
 	}
 
-	err = db.AddCharacter(ctx, &person)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	if err := api.db.AddCharacter(context.Background(), &character); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to add character: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Added character named %s", person.Name), http.StatusOK
+	ctx.JSON(http.StatusCreated, character)
 }
 
-func updateCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var person types.Character
-	err := json.Unmarshal(body, &person)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+// Handler for updating an existing character
+func (api *dbAPI) updateCharacter(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
+		return
 	}
 
-	err = db.UpdateCharacter(ctx, &person)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	var character types.Character
+	if err := ctx.ShouldBindJSON(&character); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Updated character named %s", person.Name), http.StatusOK
+	character.Name = name // Ensure the name in the URL matches the name in the payload
+	if err := api.db.UpdateCharacter(context.Background(), &character); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update character: %s", err.Error())})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, character)
 }
 
-func deleteCharacter(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+// Handler for deleting a character
+func (api *dbAPI) deleteCharacter(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
+		return
 	}
 
-	err = db.DeleteCharacter(ctx, name)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	if err := api.db.DeleteCharacter(context.Background(), name); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to delete character: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Deleted character named %s", name), http.StatusOK
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Character '%s' deleted successfully", name)})
 }

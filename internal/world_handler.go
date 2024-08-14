@@ -2,92 +2,89 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"lore-keeper-be/internal/database"
 	"lore-keeper-be/internal/types"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func getWorld(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+func (api dbAPI) getWorld(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})
+		return
 	}
 
-	world, err := db.GetWorld(ctx, name)
+	world, err := api.db.GetWorld(ctx, name)
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
-
-	response, err := json.Marshal(world)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal character: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, world)
 }
 
-func addWorld(ctx context.Context, body []byte, db database.Database) (string, int) {
+func (api dbAPI) listWorlds(ctx *gin.Context) {
+	worlds, err := api.db.ListWorlds(context.Background())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list worlds: %s", err.Error())})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, worlds)
+}
+
+// Handler for adding a new world
+func (api *dbAPI) addWorld(ctx *gin.Context) {
+	var world types.World
+	if err := ctx.ShouldBindJSON(&world); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
+	}
+
+	if err := api.db.AddWorld(context.Background(), &world); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to add world: %s", err.Error())})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, world)
+}
+
+// Handler for updating an existing world
+func (api *dbAPI) updateWorld(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})
+		return
+	}
 
 	var world types.World
-	err := json.Unmarshal(body, &world)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+	if err := ctx.ShouldBindJSON(&world); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
 	}
 
-	err = db.AddWorld(ctx, &world)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	world.Name = name // Ensure the name in the URL matches the name in the payload
+	if err := api.db.UpdateWorld(context.Background(), &world); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update world: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Added world named %s", world.Name), http.StatusOK
+	ctx.JSON(http.StatusOK, world)
 }
 
-func listWorlds(ctx context.Context, db database.Database) (string, int) {
-	worlds, err := db.ListWorlds(ctx)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+// Handler for deleting a world
+func (api *dbAPI) deleteWorld(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})
+		return
 	}
 
-	response, err := json.Marshal(worlds)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
+	if err := api.db.DeleteWorld(context.Background(), name); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to delete world: %s", err.Error())})
+		return
 	}
 
-	return string(response), http.StatusOK
-}
-
-func updateWorld(ctx context.Context, body []byte, db database.Database) (string, int) {
-
-	var world types.World
-	err := json.Unmarshal(body, &world)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
-	}
-
-	err = db.UpdateWorld(ctx, &world)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return fmt.Sprintf("Updated world named %s", world.Name), http.StatusOK
-}
-
-func deleteWorld(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
-	}
-
-	err = db.DeleteWorld(ctx, name)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return fmt.Sprintf("Deleted world named %s", name), http.StatusOK
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("World '%s' deleted successfully", name)})
 }

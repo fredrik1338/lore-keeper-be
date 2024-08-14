@@ -2,92 +2,89 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"lore-keeper-be/internal/database"
 	"lore-keeper-be/internal/types"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func getFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+func (api dbAPI) getFaction(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})
+		return
 	}
 
-	faction, err := db.GetFaction(ctx, name)
+	faction, err := api.db.GetFaction(ctx, name)
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
-
-	response, err := json.Marshal(faction)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal character: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, faction)
 }
 
-func listFactions(ctx context.Context, db database.Database) (string, int) {
-	factions, err := db.ListFactions(ctx)
+func (api dbAPI) listFactions(ctx *gin.Context) {
+	factions, err := api.db.ListFactions(context.Background())
 	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list factions: %s", err.Error())})
+		return
 	}
 
-	response, err := json.Marshal(factions)
-	if err != nil {
-		return fmt.Sprintf("failed to marshal characters: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return string(response), http.StatusOK
+	ctx.JSON(http.StatusOK, factions)
 }
 
-func addFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
+// Handler for adding a new faction
+func (api *dbAPI) addFaction(ctx *gin.Context) {
+	var faction types.Faction
+	if err := ctx.ShouldBindJSON(&faction); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
+	}
+
+	if err := api.db.AddFaction(context.Background(), &faction); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to add faction: %s", err.Error())})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, faction)
+}
+
+// Handler for updating an existing faction
+func (api *dbAPI) updateFaction(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})
+		return
+	}
 
 	var faction types.Faction
-	err := json.Unmarshal(body, &faction)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+	if err := ctx.ShouldBindJSON(&faction); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
+		return
 	}
 
-	err = db.AddFaction(ctx, &faction)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	faction.Name = name // Ensure the name in the URL matches the name in the payload
+	if err := api.db.UpdateFaction(context.Background(), &faction); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update faction: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Added faction named %s", faction.Name), http.StatusOK
+	ctx.JSON(http.StatusOK, faction)
 }
 
-func updateFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
-
-	var faction types.Faction
-	err := json.Unmarshal(body, &faction)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
+// Handler for deleting a faction
+func (api *dbAPI) deleteFaction(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})
+		return
 	}
 
-	err = db.UpdateFaction(ctx, &faction)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
+	if err := api.db.DeleteFaction(context.Background(), name); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to delete faction: %s", err.Error())})
+		return
 	}
 
-	return fmt.Sprintf("Updated faction named %s", faction.Name), http.StatusOK
-}
-
-func deleteFaction(ctx context.Context, body []byte, db database.Database) (string, int) {
-	var name string
-
-	err := json.Unmarshal(body, &name)
-	if err != nil {
-		return fmt.Sprintf("failed to unmarshal body: %s", err.Error()), http.StatusBadRequest
-	}
-
-	err = db.DeleteFaction(ctx, name)
-	if err != nil {
-		return fmt.Sprintf("database error: %s", err.Error()), http.StatusInternalServerError
-	}
-
-	return fmt.Sprintf("Deleted faction named %s", name), http.StatusOK
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Faction '%s' deleted successfully", name)})
 }
