@@ -28,8 +28,8 @@ func NewAPI(db database.Database) *dbAPI {
 
 func (api dbAPI) Run(host, port string) {
 	router := gin.Default()
+	router.Use(Options)
 	v1 := router.Group(basePath)
-	v1.Use(Options)
 	lore := v1.Group(lorePath)
 	characters := lore.Group(characters)
 	characters.GET("", api.listCharacters)
