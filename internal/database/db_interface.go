@@ -32,5 +32,11 @@ type Database interface {
 	UpdateFaction(ctx context.Context, faction *types.Faction) error
 	GetFaction(ctx context.Context, name string) (*types.Faction, error)
 
+	AddUniverse(ctx context.Context, universe *types.Universe) error
+	ListUniverses(ctx context.Context) ([]string, error)
+	DeleteUniverse(ctx context.Context, name string) error
+	UpdateUniverse(ctx context.Context, universe *types.Universe) error
+	GetUniverse(ctx context.Context, name string) (*types.Universe, error)
+
 	Shutdown() error
 }

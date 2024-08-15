@@ -7,4 +7,5 @@ var (
 	ErrNilCity      = errors.New("city is nil")
 	ErrNilWorld     = errors.New("world is nil")
 	ErrNilFaction   = errors.New("faction is nil")
+	ErrNilUniverse  = errors.New("universe is nil")
 )

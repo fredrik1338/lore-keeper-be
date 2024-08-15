@@ -29,6 +29,11 @@ const (
 		notable_characters TEXT
 	)`
 
+	SetupUniversesTable = `CREATE TABLE IF NOT EXISTS universes(
+		name TEXT PRIMARY KEY,
+		description TEXT
+	)`
+
 	AddCharacterQuery    = `INSERT INTO characters (name, description, age, world) VALUES ($1, $2, $3, $4)`
 	ListCharactersQuery  = `SELECT name FROM characters`
 	GetCharacterQuery    = `SELECT * FROM characters WHERE name=$1`
@@ -60,4 +65,11 @@ const (
 	name=$1, description=$2, founding_date=$3, notable_characters=$4
 	WHERE name=$1`
 	DeleteFactionQuery = `DELETE FROM factions WHERE name=$1`
+
+	AddUniverseQuery   = `INSERT INTO universes (name, description) VALUES ($1, $2)`
+	ListUniversesQuery = `SELECT name FROM universes`
+	GetUniverseQuery   = `SELECT * FROM universes WHERE name=$1`
+	// TODO figure out what to update
+	// UpdateUniverseQuery = `UPDATE universes SET
+	DeleteUniverseQuery = `DELETE FROM universes WHERE name=$1`
 )

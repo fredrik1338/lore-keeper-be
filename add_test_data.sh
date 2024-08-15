@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Universe
+curl -X POST http://localhost:8080/api/v1/lore-keeper/universes -d '{"name": "Lindas universum", "description": "Lindas universum"}'
+
 # Character
 curl -X POST http://localhost:8080/api/v1/lore-keeper/characters -d '{"name": "Linda", "description": "A baaaaad biish", "age": 32, "home": "earth"}'
 

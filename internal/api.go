@@ -59,6 +59,13 @@ func (api dbAPI) Run(host, port string) {
 	factions.DELETE("/:name", api.deleteFaction)
 	factions.PUT("/:name", api.updateFaction)
 
+	universes := lore.Group("universes")
+	universes.GET("", api.listUniverses)
+	universes.GET("/:name", api.getUniverse)
+	universes.POST("", api.addUniverse)
+	universes.DELETE("/:name", api.deleteUniverse)
+	universes.PUT("/:name", api.updateUniverse)
+
 	router.Run(fmt.Sprintf("%s:%s", host, port))
 
 }

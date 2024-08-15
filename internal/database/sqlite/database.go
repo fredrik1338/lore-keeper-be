@@ -62,6 +62,12 @@ func (db *Database) InitDB(ctx context.Context) error {
 	}
 	statement.Exec()
 
+	statement, err = db.sqlite.Prepare(database.SetupUniversesTable)
+	if err != nil {
+		return err
+	}
+	statement.Exec()
+
 	return nil
 }
 
@@ -358,6 +364,71 @@ func (db *Database) GetFaction(ctx context.Context, name string) (*types.Faction
 	faction.NotableCharacters = strings.Split(notableCharacters, ",")
 
 	return &faction, nil
+}
+
+func (db *Database) AddUniverse(ctx context.Context, universe *types.Universe) error {
+	statement, err := db.sqlite.Prepare(database.AddUniverseQuery)
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(universe.Name, universe.Description)
+	return err
+}
+
+func (db *Database) ListUniverses(ctx context.Context) ([]string, error) {
+	var universes []string
+	rows, err := db.sqlite.Query(database.ListUniversesQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var universe string
+		err = rows.Scan(&universe)
+		if err != nil {
+			return nil, err
+		}
+		universes = append(universes, universe)
+	}
+	rows.Close()
+	return universes, nil
+}
+
+func (db *Database) GetUniverse(ctx context.Context, name string) (*types.Universe, error) {
+	var universe types.Universe
+	rows, err := db.sqlite.Query(database.GetUniverseQuery, name)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Next() {
+		err = rows.Scan(&universe.Name, &universe.Description)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, constants.ErrNilUniverse
+	}
+	rows.Close()
+	return &universe, nil
+}
+
+func (db *Database) DeleteUniverse(ctx context.Context, name string) error {
+	statement, err := db.sqlite.Prepare(database.DeleteUniverseQuery)
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(name)
+	return err
+}
+
+// TODO figure out what to update
+func (db *Database) UpdateUniverse(ctx context.Context, universe *types.Universe) error {
+	// 	statement, err := db.sqlite.Prepare(database.UpdateUniverseQuery)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	_, err = statement.Exec(universe.Name, universe.Description)
+	// return err
+	return nil
 }
 
 func (db *Database) Shutdown() error {
