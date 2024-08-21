@@ -38,7 +38,7 @@ func New(dbName, mode string) (*Database, error) {
 func createClient(ctx context.Context, projectID, dbName, mode string) *firestore.Client {
 	// If we run dev build we run against an emulated db
 	if mode == "dev" {
-		dbhost := env.GetEnvOrDefault("FIRESTORE_EMULATOR_HOST", "localhost:8082")
+		dbhost := env.GetEnvOrDefault("FIRESTORE_EMULATOR_HOST", "localhost:8200")
 		log.Printf("dbhost %s", dbhost)
 	}
 	if mode == "CI" {
