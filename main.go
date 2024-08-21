@@ -3,21 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"lore-keeper-be/internal"
-	"lore-keeper-be/internal/database/sqlite"
+	"lore-keeper-be/internal/database/firestore"
 	"lore-keeper-be/internal/env"
 )
 
 func main() {
 	//TODO implement
-	// mode := env.GetEnvOrDefault("RUN_MODE", env.DefaultMode)
-	// dbName := env.GetEnvOrDefault("DB_NAME", env.DefaultDB)
-	// db, err := firestore.New(projectID, dbName, mode)
-	// if err != nil {
-	// 	log.Fatalf("Could not open DB due to err: %v", err)
-	// 	return
-	// }
-	database, err := sqlite.New()
+	mode := env.GetEnvOrDefault("RUN_MODE", env.DefaultMode)
+	dbName := env.GetEnvOrDefault("DB_NAME", env.DefaultDB)
+	database, err := firestore.New(dbName, mode)
+	if err != nil {
+		log.Fatalf("Could not open DB due to err: %v", err)
+		return
+	}
+
+	// database, err := sqlite.New()
 
 	if err != nil {
 		panic(fmt.Sprintf("Could not crate DB %s", err.Error()))

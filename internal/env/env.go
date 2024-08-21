@@ -7,7 +7,7 @@ const (
 	DefaultPort = "8080"
 	Host        = "BACKEND_HOST"
 	DefaultHost = "localhost"
-	DefaultDB   = "todo-database"
+	DefaultDB   = "lore-keeper-db"
 	DefaultMode = "dev"
 )
 
