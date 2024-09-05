@@ -16,7 +16,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     env:
-      PROJECT_ID: cicd-poc-sandbox
+      PROJECT_ID: august-journey-434715-u0
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
