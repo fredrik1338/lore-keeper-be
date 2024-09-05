@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy the Go application source code to the container's working directory
 COPY internal/ /app/internal/
-# COPY vendor/ /app/vendor/
+COPY vendor/ /app/vendor/
 
 # Copy the main.go file from the host into the container
 COPY main.go .
