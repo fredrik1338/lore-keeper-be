@@ -60,10 +60,8 @@ jobs:
         export VERSION=$(gcloud artifacts docker tags list europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be | tail -n 1 |  awk '{print $1}')
         export NEW_VERSION=$(./increment_semver.sh ${VERSION})
         gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet --access-token-file ${{ steps.auth.outputs.access_token }}
-        docker tag lore-keeper-be-prod europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-prod:${NEW_VERSION}
+        docker tag lore-keeper-be-prod europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-be-prod:${NEW_VERSION}
         docker push europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-be-prod:${NEW_VERSION}
-        echo "container=lore-keeper-be:${NEW_VERSION}" >> "$GITHUB_OUTPUT"
-
 
   deploy:
     needs: [test-build-and-push-prod]
