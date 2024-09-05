@@ -36,35 +36,3 @@ jobs:
       run: |
         export ACCESS_TOKEN=${{ secrets.DOCKER_PASSWORD }}
         make docker-tag-and-push-dev
-
-
-  # e2e-test:
-  #   needs: [test-build-and-push]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: 'read'
-  #     id-token: 'write'
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-    
-  #   - name: Google Auth
-  #     id: auth
-  #     uses: 'google-github-actions/auth@v2'
-  #     with:
-  #       project_id: cicd-poc-sandbox
-  #       workload_identity_provider: "${{ secrets.WIF_PROVIDER }}"
-  #       token_format: 'access_token'
-  #       service_account: "${{ secrets.WIF_SERVICE_ACCOUNT }}"
-  
-  #   - name: Set up Google Cloud SDK
-  #     uses: google-github-actions/setup-gcloud@v1
-
-  #   - name: Docker login
-  #     run: |
-  #       docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-    
-  #   - name: Run docker container & firestore
-  #     run: |
-  #       gcloud emulators firestore start --host-port=localhost:8200 -q &  
-  #       ./e2e_test.sh
