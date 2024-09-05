@@ -51,19 +51,17 @@ jobs:
         token_format: 'access_token'
         service_account: "${{ secrets.WIF_SERVICE_ACCOUNT }}"
 
-
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
     - name: Tag and push image to prod and GCP
       id: push
       run: |
-        export ACCESS_TOKEN=${{ secrets.DOCKER_PASSWORD }}
         export VERSION=$(gcloud artifacts docker tags list europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be | tail -n 1 |  awk '{print $1}')
         export NEW_VERSION=$(./increment_semver.sh ${VERSION})
         gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet --access-token-file ${{ steps.auth.outputs.access_token }}
-        docker tag lore-keeper-prod europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-prod:${NEW_VERSION}
-        docker push europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-prod:${NEW_VERSION}
+        docker tag lore-keeper-be-prod europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-prod:${NEW_VERSION}
+        docker push europe-west1-docker.pkg.dev/august-journey-434715-u0/lore-keeper-be/lore-keeper-be-prod:${NEW_VERSION}
         echo "container=lore-keeper-be:${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
 
