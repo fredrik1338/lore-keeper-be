@@ -7,6 +7,9 @@ build:
 docker-build-dev:
 	docker build -t lore-keeper-be-dev .
 
+docker-build-prod:
+	docker build -t lore-keeper-be-prod .
+
 docker-run-dev:
 	docker run -p 8080:8080 lore-keeper-be-dev
 
