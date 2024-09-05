@@ -46,7 +46,7 @@ jobs:
       id: auth
       uses: 'google-github-actions/auth@v2'
       with:
-        project_id: lore-keeper-project
+        project_id: august-journey-434715-u0
         workload_identity_provider: "${{ secrets.WIF_PROVIDER }}"
         token_format: 'access_token'
         service_account: "${{ secrets.WIF_SERVICE_ACCOUNT }}"
