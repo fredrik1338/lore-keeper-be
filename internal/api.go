@@ -66,6 +66,10 @@ func (api dbAPI) Run(host, port string) {
 	universes.DELETE("/:name", api.deleteUniverse)
 	universes.PUT("/:name", api.updateUniverse)
 
+	// TODO fix name
+	profile := lore.Group("profile")
+	profile.POST("/generate", api.generateProfile)
+
 	router.Run(fmt.Sprintf("%s:%s", host, port))
 
 }

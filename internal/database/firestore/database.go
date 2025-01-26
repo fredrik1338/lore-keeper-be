@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	// Sets your Google Cloud Platform project ID.
-	projectID  = "lore-keeper"
 	characters = "characters"
 	worlds     = "worlds"
 	cities     = "cities"
@@ -28,7 +26,7 @@ type Database struct {
 	client *firestore.Client
 }
 
-func New(dbName, mode string) (*Database, error) {
+func New(dbName, mode, projectID string) (*Database, error) {
 	client := createClient(context.Background(), projectID, dbName, mode)
 	return &Database{
 		client: client,
@@ -40,11 +38,6 @@ func createClient(ctx context.Context, projectID, dbName, mode string) *firestor
 	if mode == "dev" {
 		dbhost := env.GetEnvOrDefault("FIRESTORE_EMULATOR_HOST", "localhost:8200")
 		log.Printf("dbhost %s", dbhost)
-	}
-	if mode == "CI" {
-
-	}
-	if mode == "prod" {
 	}
 
 	client, err := firestore.NewClientWithDatabase(ctx, projectID, dbName)
@@ -86,15 +79,15 @@ func tableExists(client *firestore.Client, table string) bool {
 
 func (db *Database) AddCharacter(ctx context.Context, character *types.Character) error {
 	_, err := db.client.Collection(characters).Doc(character.Name).Set(ctx, map[string]interface{}{
-		"name":        character.Name,
-		"description": character.Description,
-		"age":         character.Age,
-		"world":       character.World,
+		"name":           character.Name,
+		"description":    character.Description,
+		"age":            character.Age,
+		"world":          character.World,
+		"profilePicture": character.ProfilePicture, // Store the Base64 string directly
 	})
 	if err != nil {
 		log.Printf("An error has occurred: %s", err)
 	}
-
 	return err
 }
 

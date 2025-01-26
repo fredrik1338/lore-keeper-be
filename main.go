@@ -9,11 +9,16 @@ import (
 	"lore-keeper-be/internal/env"
 )
 
+const (
+	// Sets your Google Cloud Platform project ID.
+	projectID = "lore-keeper-project"
+)
+
 func main() {
 	//TODO implement
 	mode := env.GetEnvOrDefault("RUN_MODE", env.DefaultMode)
 	dbName := env.GetEnvOrDefault("DB_NAME", env.DefaultDB)
-	database, err := firestore.New(dbName, mode)
+	database, err := firestore.New(dbName, mode, projectID)
 	if err != nil {
 		log.Fatalf("Could not open DB due to err: %v", err)
 		return
