@@ -27,20 +27,9 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.21.5
-        
-    - name: Build the app
-      run: make build
-
-    - name: Docker login
-      run: sudo docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build the prod Docker image
       run: make docker-build-prod
-
-    - name: Install jq
-      run: |
-        sudo apt-get update
-        sudo apt-get install jq=1.6-2.1ubuntu3
 
     - name: Google Auth
       id: auth
