@@ -67,14 +67,14 @@ func tableExists(client *firestore.Client, table string) bool {
 	for {
 		_, err := iter.Next()
 		if err == iterator.Done {
-			// Collection not found
+			log.Printf("Table %s does not exist", table)
 			return false
 		}
 		if err != nil {
-			// Error occurred while iterating
+			log.Printf("Error checking table %s: %v", table, err)
 			return false
 		}
-		// Collection found
+		log.Printf("Table %s exists", table)
 		return true
 	}
 }

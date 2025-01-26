@@ -11,7 +11,7 @@ import (
 
 const (
 	// Sets your Google Cloud Platform project ID.
-	projectID = "lore-keeper-project"
+	projectID = "august-journey-434715-u0"
 )
 
 func main() {
