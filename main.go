@@ -26,9 +26,9 @@ func main() {
 
 	// database, err := sqlite.New()
 
-	if err != nil {
-		panic(fmt.Sprintf("Could not crate DB %s", err.Error()))
-	}
+	// if err != nil {
+	// 	panic(fmt.Sprintf("Could not create DB %s", err.Error()))
+	// }
 
 	err = database.InitDB(context.TODO()) //TODO this context should be passed fomr above to allow graceful shutdown
 	if err != nil {

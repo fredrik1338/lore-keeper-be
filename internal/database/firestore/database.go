@@ -52,6 +52,7 @@ func (db *Database) InitDB(ctx context.Context) error {
 
 	for _, table := range tables {
 		if !tableExists(db.client, table) {
+			log.Printf("Creating table: %s", table)
 			db.client.Collection(table).NewDoc()
 		}
 		// Any need for error handling?
@@ -60,6 +61,7 @@ func (db *Database) InitDB(ctx context.Context) error {
 }
 
 func tableExists(client *firestore.Client, table string) bool {
+	log.Printf("Checking if table %s exists", table)
 	iter := client.Collection(table).Documents(context.Background())
 	// Iterate through the collections to find a match
 	for {
