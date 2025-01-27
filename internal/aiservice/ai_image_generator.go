@@ -44,7 +44,7 @@ func (service AIService) GenerateProfile(ctx *gin.Context) {
 		req.Name, req.HairColor, req.Profession, req.Build, req.Gender,
 	)
 
-	imageBase64, err := callVertexAI(ctx, service, prompt)
+	imageBase64, err := callVertexAIWithSDK(ctx, "august-journey-434715-u0", "us-central1", "imagen-3.0-generate-001", prompt)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate profile", "details": err.Error()})
 		return
@@ -56,7 +56,7 @@ func (service AIService) GenerateProfile(ctx *gin.Context) {
 	})
 }
 
-func callVertexAI(ctx context.Context, service AIService, prompt string) (string, error) {
+func callVertexAIWithSDK(ctx context.Context, projectID, location, modelID, prompt string) (string, error) {
 	// Create the Vertex AI Prediction client
 	client, err := aiplatform.NewPredictionClient(ctx)
 	if err != nil {
@@ -64,50 +64,44 @@ func callVertexAI(ctx context.Context, service AIService, prompt string) (string
 	}
 	defer client.Close()
 
-	// Define the endpoint for the model
-	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s", service.projectID, service.location, service.model)
+	// Define the model endpoint
+	modelEndpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s", projectID, location, modelID)
 
-	// Define the instances (input) for the request
-	instances := []*structpb.Value{
-		structpb.NewStructValue(&structpb.Struct{
+	// Build the request payload
+	req := &aiplatformpb.PredictRequest{
+		Endpoint: modelEndpoint,
+		Instances: []*structpb.Value{
+			structpb.NewStructValue(&structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"prompt": structpb.NewStringValue(prompt),
+				},
+			}),
+		},
+		Parameters: structpb.NewStructValue(&structpb.Struct{
 			Fields: map[string]*structpb.Value{
-				"prompt": structpb.NewStringValue(prompt),
+				"temperature": structpb.NewNumberValue(0.8),
+				"sampleCount": structpb.NewNumberValue(1),
 			},
 		}),
 	}
 
-	// Define the parameters for the request
-	parameters := structpb.NewStructValue(&structpb.Struct{
-		Fields: map[string]*structpb.Value{
-			"temperature": structpb.NewNumberValue(0.8),
-			"sampleCount": structpb.NewNumberValue(1),
-		},
-	})
-
-	// Create the PredictRequest using the updated types
-	req := &aiplatformpb.PredictRequest{
-		Endpoint:   endpoint,
-		Instances:  instances,
-		Parameters: parameters,
-	}
-
-	// Call the Vertex AI Predict API
+	// Call the Vertex AI API
 	resp, err := client.Predict(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("failed to call Vertex AI: %w", err)
 	}
 
-	// Extract the Base64-encoded image from the response
+	// Extract predictions from the response
 	if len(resp.Predictions) == 0 {
 		return "", fmt.Errorf("no predictions found in response")
 	}
 
-	// Extract the prediction details
+	// Extract the Base64-encoded image from the predictions
 	prediction := resp.Predictions[0].GetStructValue().Fields
 	imageBase64 := prediction["bytesBase64Encoded"].GetStringValue()
 
 	if imageBase64 == "" {
-		return "", fmt.Errorf("failed to extract image data")
+		return "", fmt.Errorf("failed to extract image data from response")
 	}
 
 	return imageBase64, nil
