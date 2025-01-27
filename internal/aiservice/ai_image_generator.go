@@ -1,37 +1,37 @@
 package aiservice
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"lore-keeper-be/internal/types"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/protobuf/types/known/structpb"
-
-	aiplatform "cloud.google.com/go/aiplatform/apiv1"
-	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
+	"golang.org/x/oauth2/google"
 )
 
 // TODO what to name this?
 type AIService struct {
-	projectID string
-	location  string
-	model     string
+	mode   string
+	apiURL string
 }
 
-func New(projectID, location, model string) *AIService {
+func New(projectID, location, model, mode string) *AIService {
 	return &AIService{
-		projectID: projectID,
-		location:  location,
-		model:     model,
+		mode: mode,
+		apiURL: fmt.Sprintf(
+			"https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:predict",
+			location, projectID, location, model),
 	}
 }
 
 // TODO where should we keep this?
 func (service AIService) GenerateProfile(ctx *gin.Context) {
-
-	// Parse and validate the request body
 	var req types.GenerateProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
@@ -44,7 +44,7 @@ func (service AIService) GenerateProfile(ctx *gin.Context) {
 		req.Name, req.HairColor, req.Profession, req.Build, req.Gender,
 	)
 
-	imageBase64, err := callVertexAIWithSDK(ctx, "august-journey-434715-u0", "us-central1", "imagen-3.0-generate-001", prompt)
+	imageBase64, err := callVertexAIWithREST(context.Background(), service.apiURL, prompt, service.mode)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate profile", "details": err.Error()})
 		return
@@ -56,53 +56,95 @@ func (service AIService) GenerateProfile(ctx *gin.Context) {
 	})
 }
 
-func callVertexAIWithSDK(ctx context.Context, projectID, location, modelID, prompt string) (string, error) {
-	// Create the Vertex AI Prediction client
-	client, err := aiplatform.NewPredictionClient(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to create Vertex AI client: %w", err)
-	}
-	defer client.Close()
+func callVertexAIWithREST(ctx context.Context, apiURL, prompt, mode string) (string, error) {
 
-	// Define the model endpoint
-	modelEndpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s", projectID, location, modelID)
-
-	// Build the request payload
-	req := &aiplatformpb.PredictRequest{
-		Endpoint: modelEndpoint,
-		Instances: []*structpb.Value{
-			structpb.NewStructValue(&structpb.Struct{
-				Fields: map[string]*structpb.Value{
-					"prompt": structpb.NewStringValue(prompt),
-				},
-			}),
+	// Construct the request payload
+	requestBody := map[string]interface{}{
+		"instances": []map[string]interface{}{
+			{"prompt": prompt},
 		},
-		Parameters: structpb.NewStructValue(&structpb.Struct{
-			Fields: map[string]*structpb.Value{
-				"temperature": structpb.NewNumberValue(0.8),
-				"sampleCount": structpb.NewNumberValue(1),
-			},
-		}),
+		"parameters": map[string]interface{}{
+			"temperature": 0.8,
+			"sampleCount": 1,
+		},
 	}
 
-	// Call the Vertex AI API
-	resp, err := client.Predict(ctx, req)
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add Authorization header with ADC token
+	token := getAccessToken(mode)
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to call Vertex AI: %w", err)
 	}
+	defer resp.Body.Close()
 
-	// Extract predictions from the response
-	if len(resp.Predictions) == 0 {
-		return "", fmt.Errorf("no predictions found in response")
+	// Handle response
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("Vertex AI API returned error: %s", string(body))
 	}
 
-	// Extract the Base64-encoded image from the predictions
-	prediction := resp.Predictions[0].GetStructValue().Fields
-	imageBase64 := prediction["bytesBase64Encoded"].GetStringValue()
+	// Parse the response
+	var response map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", fmt.Errorf("failed to parse Vertex AI response: %w", err)
+	}
 
-	if imageBase64 == "" {
-		return "", fmt.Errorf("failed to extract image data from response")
+	// Extract the Base64-encoded image
+	predictions, ok := response["predictions"].([]interface{})
+	if !ok || len(predictions) == 0 {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("no predictions found in Vertex AI response. Response: %s", string(body))
+	}
+
+	imageBase64, ok := predictions[0].(map[string]interface{})["bytesBase64Encoded"].(string)
+	if !ok {
+		return "", fmt.Errorf("failed to extract image data")
 	}
 
 	return imageBase64, nil
+}
+
+// Helper function to get the access token
+func getAccessToken(mode string) string {
+
+	if mode == "dev" {
+		log.Println("Using hardcoded access token for local development")
+		token := os.Getenv("ACCESS_TOKEN")
+		if token == "" {
+			log.Fatal("ACCESS_TOKEN environment variable not set")
+		}
+		return token
+	} else {
+		ctx := context.Background()
+
+		// Create the default token source (automatically tied to the service account in Cloud Run)
+		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			log.Fatalf("Failed to create token source: %v", err)
+		}
+
+		// Retrieve the token
+		token, err := tokenSource.Token()
+		if err != nil {
+			log.Fatalf("Failed to fetch access token: %v", err)
+		}
+
+		return token.AccessToken
+	}
+
 }

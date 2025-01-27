@@ -38,7 +38,19 @@ func main() {
 		panic(fmt.Sprintf("Could not init DB %s", err.Error()))
 	}
 
-	aiService := aiservice.New(projectID, location, model)
+	// // Check Application Default Credentials (ADC)
+	// creds, err := transport.Creds(ctx, option.WithScopes("https://www.googleapis.com/auth/cloud-platform"))
+	// if err != nil {
+	// 	log.Fatalf("Failed to find default credentials: %v", err)
+	// }
+	// // Debug log. should be removed in production
+	// token, err := creds.TokenSource.Token()
+	// if err != nil {
+	// 	log.Fatalf("Failed to retrieve token: %v", err)
+	// }
+	// log.Printf("Retrieved token: %s", token.AccessToken)
+
+	aiService := aiservice.New(projectID, location, model, mode)
 
 	server := internal.NewAPI(database, aiService)
 
