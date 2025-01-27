@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api dbAPI) getWorld(ctx *gin.Context) {
+func (api API) getWorld(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})
@@ -24,7 +24,7 @@ func (api dbAPI) getWorld(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, world)
 }
 
-func (api dbAPI) listWorlds(ctx *gin.Context) {
+func (api API) listWorlds(ctx *gin.Context) {
 	worlds, err := api.db.ListWorlds(context.Background())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list worlds: %s", err.Error())})
@@ -35,7 +35,7 @@ func (api dbAPI) listWorlds(ctx *gin.Context) {
 }
 
 // Handler for adding a new world
-func (api *dbAPI) addWorld(ctx *gin.Context) {
+func (api *API) addWorld(ctx *gin.Context) {
 	var world types.World
 	if err := ctx.ShouldBindJSON(&world); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
@@ -51,7 +51,7 @@ func (api *dbAPI) addWorld(ctx *gin.Context) {
 }
 
 // Handler for updating an existing world
-func (api *dbAPI) updateWorld(ctx *gin.Context) {
+func (api *API) updateWorld(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})
@@ -74,7 +74,7 @@ func (api *dbAPI) updateWorld(ctx *gin.Context) {
 }
 
 // Handler for deleting a world
-func (api *dbAPI) deleteWorld(ctx *gin.Context) {
+func (api *API) deleteWorld(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "World name is required"})

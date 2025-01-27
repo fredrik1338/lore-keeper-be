@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"lore-keeper-be/internal"
+	"lore-keeper-be/internal/aiservice"
 	"lore-keeper-be/internal/database/firestore"
 	"lore-keeper-be/internal/env"
 )
@@ -12,6 +13,8 @@ import (
 const (
 	// Sets your Google Cloud Platform project ID.
 	projectID = "august-journey-434715-u0"
+	location  = "us-central1"
+	model     = "imagen-3.0-generate-001"
 )
 
 func main() {
@@ -35,7 +38,9 @@ func main() {
 		panic(fmt.Sprintf("Could not init DB %s", err.Error()))
 	}
 
-	server := internal.NewAPI(database)
+	aiService := aiservice.New(projectID, location, model)
+
+	server := internal.NewAPI(database, aiService)
 
 	port := env.GetEnvOrDefault(env.Port, env.DefaultPort)
 	host := env.GetEnvOrDefault(env.Host, env.DefaultHost)

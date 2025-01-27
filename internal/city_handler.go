@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api dbAPI) getCity(ctx *gin.Context) {
+func (api API) getCity(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
@@ -24,7 +24,7 @@ func (api dbAPI) getCity(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, city)
 }
 
-func (api dbAPI) listCities(ctx *gin.Context) {
+func (api API) listCities(ctx *gin.Context) {
 	citys, err := api.db.ListCities(context.Background())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list citys: %s", err.Error())})
@@ -35,7 +35,7 @@ func (api dbAPI) listCities(ctx *gin.Context) {
 }
 
 // Handler for adding a new city
-func (api *dbAPI) addCity(ctx *gin.Context) {
+func (api *API) addCity(ctx *gin.Context) {
 	var city types.City
 	if err := ctx.ShouldBindJSON(&city); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
@@ -51,7 +51,7 @@ func (api *dbAPI) addCity(ctx *gin.Context) {
 }
 
 // Handler for updating an existing city
-func (api *dbAPI) updateCity(ctx *gin.Context) {
+func (api *API) updateCity(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
@@ -74,7 +74,7 @@ func (api *dbAPI) updateCity(ctx *gin.Context) {
 }
 
 // Handler for deleting a city
-func (api *dbAPI) deleteCity(ctx *gin.Context) {
+func (api *API) deleteCity(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "City name is required"})
