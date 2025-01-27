@@ -126,7 +126,7 @@ func getAccessToken(mode string) string {
 		log.Println("Using hardcoded access token for local development")
 		token := os.Getenv("ACCESS_TOKEN")
 		if token == "" {
-			log.Fatal("ACCESS_TOKEN environment variable not set")
+			log.Printf("ACCESS_TOKEN environment variable not set")
 		}
 		return token
 	} else {
@@ -135,13 +135,13 @@ func getAccessToken(mode string) string {
 		// Create the default token source (automatically tied to the service account in Cloud Run)
 		tokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
 		if err != nil {
-			log.Fatalf("Failed to create token source: %v", err)
+			log.Printf("Failed to create token source: %v", err)
 		}
 
 		// Retrieve the token
 		token, err := tokenSource.Token()
 		if err != nil {
-			log.Fatalf("Failed to fetch access token: %v", err)
+			log.Printf("Failed to fetch access token: %v", err)
 		}
 
 		return token.AccessToken
