@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api dbAPI) getFaction(ctx *gin.Context) {
+func (api API) getFaction(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})
@@ -24,7 +24,7 @@ func (api dbAPI) getFaction(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, faction)
 }
 
-func (api dbAPI) listFactions(ctx *gin.Context) {
+func (api API) listFactions(ctx *gin.Context) {
 	factions, err := api.db.ListFactions(context.Background())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list factions: %s", err.Error())})
@@ -35,7 +35,7 @@ func (api dbAPI) listFactions(ctx *gin.Context) {
 }
 
 // Handler for adding a new faction
-func (api *dbAPI) addFaction(ctx *gin.Context) {
+func (api *API) addFaction(ctx *gin.Context) {
 	var faction types.Faction
 	if err := ctx.ShouldBindJSON(&faction); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
@@ -51,7 +51,7 @@ func (api *dbAPI) addFaction(ctx *gin.Context) {
 }
 
 // Handler for updating an existing faction
-func (api *dbAPI) updateFaction(ctx *gin.Context) {
+func (api *API) updateFaction(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})
@@ -74,7 +74,7 @@ func (api *dbAPI) updateFaction(ctx *gin.Context) {
 }
 
 // Handler for deleting a faction
-func (api *dbAPI) deleteFaction(ctx *gin.Context) {
+func (api *API) deleteFaction(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Faction name is required"})

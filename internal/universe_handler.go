@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api dbAPI) getUniverse(ctx *gin.Context) {
+func (api API) getUniverse(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Universe name is required"})
@@ -24,7 +24,7 @@ func (api dbAPI) getUniverse(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, universe)
 }
 
-func (api dbAPI) listUniverses(ctx *gin.Context) {
+func (api API) listUniverses(ctx *gin.Context) {
 	universes, err := api.db.ListUniverses(context.Background())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list universes: %s", err.Error())})
@@ -35,7 +35,7 @@ func (api dbAPI) listUniverses(ctx *gin.Context) {
 }
 
 // Handler for adding a new universe
-func (api *dbAPI) addUniverse(ctx *gin.Context) {
+func (api *API) addUniverse(ctx *gin.Context) {
 	var universe types.Universe
 	if err := ctx.ShouldBindJSON(&universe); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
@@ -51,7 +51,7 @@ func (api *dbAPI) addUniverse(ctx *gin.Context) {
 }
 
 // Handler for updating an existing universe
-func (api *dbAPI) updateUniverse(ctx *gin.Context) {
+func (api *API) updateUniverse(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Universe name is required"})
@@ -74,7 +74,7 @@ func (api *dbAPI) updateUniverse(ctx *gin.Context) {
 }
 
 // Handler for deleting a universe
-func (api *dbAPI) deleteUniverse(ctx *gin.Context) {
+func (api *API) deleteUniverse(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Universe name is required"})

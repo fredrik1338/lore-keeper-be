@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"lore-keeper-be/internal/aiservice"
 	"lore-keeper-be/internal/database"
 
 	"github.com/gin-gonic/gin"
@@ -16,17 +17,19 @@ const (
 	factions   = "factions"
 )
 
-type dbAPI struct {
-	db database.Database // TODO gotta move stuff around, this is not clear
+type API struct {
+	db      database.Database // TODO gotta move stuff around, this is not clear
+	service *aiservice.AIService
 }
 
-func NewAPI(db database.Database) *dbAPI {
-	return &dbAPI{
-		db: db,
+func NewAPI(db database.Database, service *aiservice.AIService) *API {
+	return &API{
+		db:      db,
+		service: service,
 	}
 }
 
-func (api dbAPI) Run(host, port string) {
+func (api API) Run(host, port string) {
 	router := gin.Default()
 	router.Use(Options)
 	v1 := router.Group(basePath)
@@ -68,7 +71,7 @@ func (api dbAPI) Run(host, port string) {
 
 	// TODO fix name
 	profile := lore.Group("profile")
-	profile.POST("/generate", api.generateProfile)
+	profile.POST("/generate", api.service.GenerateProfile)
 
 	router.Run(fmt.Sprintf("%s:%s", host, port))
 

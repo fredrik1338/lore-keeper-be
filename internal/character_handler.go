@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api dbAPI) getCharacter(ctx *gin.Context) {
+func (api API) getCharacter(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
@@ -25,7 +25,7 @@ func (api dbAPI) getCharacter(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, character)
 }
 
-func (api dbAPI) listCharacters(ctx *gin.Context) {
+func (api API) listCharacters(ctx *gin.Context) {
 	characters, err := api.db.ListCharacters(context.Background())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to list characters: %s", err.Error())})
@@ -35,7 +35,7 @@ func (api dbAPI) listCharacters(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, characters)
 }
 
-func (api *dbAPI) addCharacter(ctx *gin.Context) {
+func (api *API) addCharacter(ctx *gin.Context) {
 	var character types.Character
 	if err := ctx.ShouldBindJSON(&character); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err.Error())})
@@ -59,7 +59,7 @@ func (api *dbAPI) addCharacter(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, character)
 }
 
-func (api *dbAPI) updateCharacter(ctx *gin.Context) {
+func (api *API) updateCharacter(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
@@ -102,7 +102,7 @@ func (api *dbAPI) updateCharacter(ctx *gin.Context) {
 }
 
 // Handler for deleting a character
-func (api *dbAPI) deleteCharacter(ctx *gin.Context) {
+func (api *API) deleteCharacter(ctx *gin.Context) {
 	name := ctx.Param("name")
 	if name == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Character name is required"})
