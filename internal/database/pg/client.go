@@ -78,6 +78,26 @@ func (db *Database) AddCharacter(ctx context.Context, character *types.Character
 	return err
 }
 
+func (db *Database) ListCharacters(ctx context.Context) ([]string, error) {
+	var characters []string
+	rows, err := db.pg.QueryContext(ctx, database.ListCharactersQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var character string
+		err := rows.Scan(&character)
+		if err != nil {
+
+			return nil, err
+		}
+		characters = append(characters, character)
+	}
+
+	rows.Close()
+	return characters, nil
+}
+
 func (db *Database) DeleteCharacter(ctx context.Context, name string) error {
 	_, err := db.pg.QueryContext(ctx, database.DeleteCharacterQuery, name)
 	return err
@@ -95,14 +115,13 @@ func (db *Database) GetCharacter(ctx context.Context, name string) (*types.Chara
 	var person types.Character
 	rows, err := db.pg.QueryContext(ctx, database.GetCharacterQuery, name)
 	if err != nil {
-		fmt.Printf("got error %s", err.Error())
 		return nil, err
 	}
 
 	if rows.Next() {
 		err = rows.Scan(&person.Name, &person.Age, &person.World)
 		if err != nil {
-			fmt.Printf("got error %s", err.Error())
+
 			return nil, err
 		}
 	} else {
@@ -126,6 +145,27 @@ func (db *Database) AddWorld(ctx context.Context, world *types.World) error {
 	return err
 }
 
+func (db *Database) ListWorlds(ctx context.Context) ([]string, error) {
+	var worlds []string
+	rows, err := db.pg.QueryContext(ctx, database.ListWorldsQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var world string
+		err := rows.Scan(&world)
+		if err != nil {
+
+			return nil, err
+		}
+		worlds = append(worlds, world)
+	}
+
+	rows.Close()
+	fmt.Printf("got worlds %v", worlds)
+	return worlds, nil
+}
+
 func (db *Database) UpdateWorld(ctx context.Context, world *types.World) error {
 	if world == nil {
 		return constants.ErrNilWorld
@@ -141,13 +181,12 @@ func (db *Database) GetWorld(ctx context.Context, name string) (*types.World, er
 	var world types.World
 	rows, err := db.pg.QueryContext(ctx, database.GetWorldQuery)
 	if err != nil {
-		fmt.Printf("got error %s", err.Error())
 		return nil, err
 	}
 	for rows.Next() {
 		err := rows.Scan(&world.Name, &world.Description, &world.Cities)
 		if err != nil {
-			fmt.Printf("got error %s", err.Error())
+
 			return nil, err
 		}
 	}
@@ -174,6 +213,27 @@ func (db *Database) AddCity(ctx context.Context, city *types.City) error {
 	return err
 }
 
+func (db *Database) ListCities(ctx context.Context) ([]string, error) {
+	var cities []string
+	rows, err := db.pg.QueryContext(ctx, database.ListCitiesQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var city string
+		err := rows.Scan(&city)
+		if err != nil {
+
+			return nil, err
+		}
+		cities = append(cities, city)
+	}
+
+	rows.Close()
+	fmt.Printf("got cities %v", cities)
+	return cities, nil
+}
+
 func (db *Database) UpdateCity(ctx context.Context, city *types.City) error {
 	if city == nil {
 		return constants.ErrNilCity
@@ -191,7 +251,6 @@ func (db *Database) GetCity(ctx context.Context, name string) (*types.City, erro
 	var city types.City
 	rows, err := db.pg.QueryContext(ctx, database.GetCityQuery, name)
 	if err != nil {
-		fmt.Printf("got error %s", err.Error())
 		return nil, err
 	}
 	for rows.Next() {
@@ -201,7 +260,7 @@ func (db *Database) GetCity(ctx context.Context, name string) (*types.City, erro
 			city.NotableCharacters,
 			city.Factions)
 		if err != nil {
-			fmt.Printf("got error %s", err.Error())
+
 			return nil, err
 		}
 	}
@@ -228,6 +287,27 @@ func (db *Database) AddFaction(ctx context.Context, faction *types.Faction) erro
 	return err
 }
 
+func (db *Database) ListFactions(ctx context.Context) ([]string, error) {
+	var factions []string
+	rows, err := db.pg.QueryContext(ctx, database.ListFactionsQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var faction string
+		err := rows.Scan(&faction)
+		if err != nil {
+
+			return nil, err
+		}
+		factions = append(factions, faction)
+	}
+
+	rows.Close()
+	fmt.Printf("got factions %v", factions)
+	return factions, nil
+}
+
 func (db *Database) UpdateFaction(ctx context.Context, faction *types.Faction) error {
 	if faction == nil {
 		return constants.ErrNilFaction
@@ -244,7 +324,6 @@ func (db *Database) GetFaction(ctx context.Context, name string) (*types.Faction
 	var faction types.Faction
 	rows, err := db.pg.QueryContext(ctx, database.GetFactionQuery, name)
 	if err != nil {
-		fmt.Printf("got error %s", err.Error())
 		return nil, err
 	}
 	for rows.Next() {
@@ -253,7 +332,7 @@ func (db *Database) GetFaction(ctx context.Context, name string) (*types.Faction
 			&faction.FoundingDate,
 			faction.NotableCharacters)
 		if err != nil {
-			fmt.Printf("got error %s", err.Error())
+
 			return nil, err
 		}
 	}
@@ -265,5 +344,65 @@ func (db *Database) GetFaction(ctx context.Context, name string) (*types.Faction
 
 func (db *Database) DeleteFaction(ctx context.Context, name string) error {
 	_, err := db.pg.QueryContext(ctx, database.DeleteFactionQuery, name)
+	return err
+}
+
+func (db *Database) AddUniverse(ctx context.Context, universe *types.Universe) error {
+	if universe == nil {
+		return constants.ErrNilUniverse
+	}
+	_, err := db.pg.QueryContext(ctx, database.AddUniverseQuery, universe.Name,
+		universe.Description)
+	return err
+}
+
+func (db *Database) GetUniverse(ctx context.Context, name string) (*types.Universe, error) {
+	var universe types.Universe
+	rows, err := db.pg.QueryContext(ctx, database.GetUniverseQuery, name)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		err := rows.Scan(&universe.Name, &universe.Description)
+		if err != nil {
+
+			return nil, err
+		}
+	}
+
+	rows.Close()
+	fmt.Printf("got universe %v", universe)
+	return &universe, nil
+}
+
+func (db *Database) ListUniverses(ctx context.Context) ([]string, error) {
+	var universes []string
+	rows, err := db.pg.QueryContext(ctx, database.ListUniversesQuery)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var universe string
+		err := rows.Scan(&universe)
+		if err != nil {
+
+			return nil, err
+		}
+		universes = append(universes, universe)
+	}
+
+	rows.Close()
+	fmt.Printf("got universes %v", universes)
+	return universes, nil
+}
+
+func (db *Database) UpdateUniverse(ctx context.Context, universe *types.Universe) error {
+	// TODO figure out what to update
+
+	return nil
+}
+
+func (db *Database) DeleteUniverse(ctx context.Context, name string) error {
+	_, err := db.pg.QueryContext(ctx, database.DeleteUniverseQuery, name)
 	return err
 }
